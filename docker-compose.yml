@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: bookcloud
+      MYSQL_DATABASE: bookcloud_db
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pbookcloud"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    volumes:
+      - ../keycloak/realm-bookcloud.json:/opt/keycloak/data/import/realm-bookcloud.json:ro
+
+  smartlibrary:
+    build: .
+    depends_on:
+      mysql:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: bookcloud_db
+      DB_USER: root
+      DB_PASS: bookcloud
+      KEYCLOAK_BASE_URL: http://keycloak:8080
+      KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/bookcloud/protocol/openid-connect/certs
+      APP_FRONTEND_ORIGIN: https://bookcloud-83374.web.app
+
+volumes:
+  mysql-data:
