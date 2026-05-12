@@ -13,6 +13,14 @@ import org.springframework.web.util.pattern.PathPatternParser;
 @Configuration
 public class CorsConfig {
 
+	private static final List<String> DEFAULT_ALLOWED_HEADERS = List.of(
+			"Authorization",
+			"Content-Type",
+			"Accept",
+			"Origin",
+			"X-Requested-With",
+			"ngrok-skip-browser-warning");
+
 	@Bean
 	CorsConfigurationSource corsConfigurationSource(AppProperties appProperties) {
 		CorsConfiguration configuration = new CorsConfiguration();
@@ -22,15 +30,18 @@ public class CorsConfig {
 		originPatterns.add("https://*.ngrok-free.app");
 		originPatterns.add("https://*.web.app");
 		originPatterns.add("https://*.firebaseapp.com");
+		originPatterns.add("https://bookcloud-83374.web.app");
+		originPatterns.add("https://bookcloud-83374.firebaseapp.com");
 		String configuredOrigin = appProperties.getFrontend().getOrigin();
 		if (configuredOrigin != null && !configuredOrigin.isBlank()) {
 			originPatterns.add(configuredOrigin.trim());
 		}
 		configuration.setAllowedOriginPatterns(originPatterns);
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-		configuration.setAllowedHeaders(List.of("*"));
+		configuration.setAllowedHeaders(DEFAULT_ALLOWED_HEADERS);
 		configuration.setExposedHeaders(List.of("Authorization"));
-		configuration.setAllowCredentials(true);
+		configuration.setAllowCredentials(false);
+		configuration.setMaxAge(3600L);
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource(new PathPatternParser());
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
