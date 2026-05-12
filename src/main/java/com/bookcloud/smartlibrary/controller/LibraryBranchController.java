@@ -32,13 +32,11 @@ public class LibraryBranchController {
 	}
 
 	@GetMapping
-	@PreAuthorize("isAuthenticated()")
 	public List<LibraryBranch> list() {
 		return libraryBranchService.listAll();
 	}
 
 	@GetMapping("/{id}")
-	@PreAuthorize("isAuthenticated()")
 	public LibraryBranch get(@PathVariable Long id) {
 		return libraryBranchService.getById(id);
 	}
